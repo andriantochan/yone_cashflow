@@ -1,4 +1,5 @@
 {
-    "functions": { "*.py": { "runtime": "python3.11" } },
-    "routes": [{ "src": "/api/telegram", "dest": "/api/telegram.py" }]
+  "functions": {
+    "api/**/*.py": { "runtime": "vercel-python@3.11" }
   }
+}
