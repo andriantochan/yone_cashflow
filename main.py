@@ -12,6 +12,7 @@ from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import pytesseract
 from pytesseract import Output
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -681,11 +682,11 @@ async def show_summary(update: Update):
         saldo = income - outcome
         msg = (
             "📊 Ringkasan:\n"
-            f"• Total income: {_format_rp(income)}\n"
-            f"• Total outcome: {_format_rp(outcome)}\n"
-            f"• Saldo: {_format_rp(saldo)}"
+            f"• Total income: <span class=\"tg-spoiler\">{_format_rp(income)}</span>\n"
+            f"• Total outcome: <span class=\"tg-spoiler\">{_format_rp(outcome)}</span>\n"
+            f"• Saldo: <span class=\"tg-spoiler\">{_format_rp(saldo)}</span>"
         )
-        await update.message.reply_text(msg)
+        await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
         await _show_menu(update)
     except Exception as e:
         logging.exception("summary failed")
@@ -784,6 +785,13 @@ async def free_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return AMOUNT
 
 async def ocr_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Skip OCR on environments without Tesseract (e.g., Vercel)
+    if os.getenv("DISABLE_OCR", "").lower() in {"1", "true", "yes"}:
+        await update.message.reply_text(
+            "OCR dinonaktifkan di lingkungan ini. Silakan input manual."
+        )
+        await _show_menu(update)
+        return ConversationHandler.END
     # Download the highest resolution photo
     try:
         status_msg = await update.message.reply_text("🔎 Membaca gambar…")
